@@ -14,7 +14,7 @@ and `libglvnd`.
 **With mise** (recommended; [install mise](https://mise.jdx.dev/getting-started.html) first):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/huacnlee/OpenRGB/iqunix-ev63/scripts/iqunix/setup.sh | bash -s -- --method mise
+curl -fsSL https://raw.githubusercontent.com/huacnlee/OpenRGB/main/scripts/iqunix/setup.sh | bash -s -- --method mise
 ```
 
 Uses mise's [GitHub backend](https://mise.jdx.dev/dev-tools/backends/github.html)
@@ -24,7 +24,7 @@ to install the release and select it globally. Run from a mise-activated shell;
 **With curl**:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/huacnlee/OpenRGB/iqunix-ev63/scripts/iqunix/setup.sh | bash -s -- --method curl
+curl -fsSL https://raw.githubusercontent.com/huacnlee/OpenRGB/main/scripts/iqunix/setup.sh | bash -s -- --method curl
 ```
 
 Downloads the release, verifies `SHA256SUMS`, and installs the executable at

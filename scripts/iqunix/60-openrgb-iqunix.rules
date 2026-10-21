@@ -1,0 +1,2 @@
+# IQUNIX EV63 lighting interface
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3869", ATTRS{idProduct}=="63e1", TAG+="uaccess"

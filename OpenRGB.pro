@@ -27,12 +27,13 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 #-----------------------------------------------------------------------------------------------#
 MAJOR       = 1
 MINOR       = 1
-SUFFIX      = git
+SUFFIX      = iqunix-ev63.1
 
 SHORTHASH   = $$system("git rev-parse --short=7 HEAD")
 LASTTAG     = "release_"$$MAJOR"."$$MINOR
 COMMAND     = "git rev-list --count "$$LASTTAG"..HEAD"
 COMMITS     = $$system($$COMMAND)
+isEmpty(COMMITS): COMMITS = 0
 
 VERSION_NUM = $$MAJOR"."$$MINOR"."$$COMMITS
 VERSION_STR = $$MAJOR"."$$MINOR

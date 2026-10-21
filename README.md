@@ -1,3 +1,49 @@
+# IQUNIX EV63 fork
+
+Adds per-key lighting and brightness for the wired IQUNIX EV63 (`3869:63e1`),
+with [omarchy-theme-rgb](https://github.com/huacnlee/omarchy-theme-rgb) integration.
+[Download the release](https://github.com/huacnlee/OpenRGB/releases/latest) ·
+[Protocol and validation](Documentation/IQUNIX-EV63.md)
+
+## Install on Arch Linux / Omarchy (x86_64)
+
+Keep the system `openrgb` package installed for its dependencies and other
+device rules. The fork also needs `qt6-base`, `hidapi`, `libusb`, `mbedtls3`,
+and `libglvnd`.
+
+**With mise** (recommended; [install mise](https://mise.jdx.dev/getting-started.html) first):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/huacnlee/OpenRGB/iqunix-ev63/scripts/iqunix/setup.sh | bash -s -- --method mise
+```
+
+Uses mise's [GitHub backend](https://mise.jdx.dev/dev-tools/backends/github.html)
+to install the release and select it globally. Run from a mise-activated shell;
+`command -v openrgb` should point into the mise installation or shims.
+
+**With curl**:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/huacnlee/OpenRGB/iqunix-ev63/scripts/iqunix/setup.sh | bash -s -- --method curl
+```
+
+Downloads the release, verifies `SHA256SUMS`, and installs the executable at
+`/usr/local/bin/openrgb`. Both methods install the EV63 udev rule using sudo.
+The default version is `1.1-iqunix-ev63.1`; append `--version TAG` to select
+another compatible release. [Read the installer](scripts/iqunix/setup.sh).
+
+Restart the SDK server after installation. On Omarchy:
+
+```sh
+omarchy restart shell
+openrgb --version
+openrgb --list-detailed
+```
+
+Use the latest `omarchy-theme-rgb`, which supports OpenRGB 1.1 detailed listings.
+
+---
+
 ## ![OpenRGB](Documentation/Images/OpenRGB.png "OpenRGB Logo")
 
 ![Pipeline Status](https://gitlab.com/CalcProgrammer1/OpenRGB/badges/master/pipeline.svg)

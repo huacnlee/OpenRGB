@@ -12,7 +12,7 @@ The release archive contains an Arch Linux x86_64 build, its license, and an
 installer. Runtime packages: `qt6-base`, `hidapi`, `libusb`, `mbedtls3`, and
 `libglvnd`. This native build uses the system libraries.
 
-Extract the archive and run `sudo ./install.sh`. The installer places the
+Use either the mise or curl installer in the [README](../README.md#install-on-arch-linux--omarchy-x86_64), or extract the archive and run `sudo ./install.sh`. The installer places the
 executable at `/usr/local/bin/openrgb` and adds the EV63 udev rule. Keep the
 distribution's OpenRGB package installed for its dependencies and other device
 rules. Restart the OpenRGB SDK server; with omarchy-theme-rgb, run

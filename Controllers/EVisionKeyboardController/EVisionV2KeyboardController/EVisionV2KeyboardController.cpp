@@ -63,7 +63,7 @@ EVisionV2KeyboardController::EVisionV2KeyboardController(hid_device* dev_handle,
     {
         return;
     }
-    if(buffer[0] != 0xAA && buffer[1] != 0x55)
+    if(buffer[0] != 0xAA || buffer[1] != 0x55)
     {
         return;
     }
@@ -82,6 +82,19 @@ EVisionV2KeyboardController::EVisionV2KeyboardController(hid_device* dev_handle,
             keyvalue_map = endorfy_map;
             led_count = 104;
             break;
+
+        case RAINY75_KEYBOARD_LAYOUT:
+            if(map_size != 128)
+            {
+                return;
+            }
+            for(unsigned int i = 0; i < RAINY75_LED_COUNT; i++)
+            {
+                rainy75_map[i] = rainy75_keys[i].index;
+            }
+            keyvalue_map = rainy75_map;
+            led_count = RAINY75_LED_COUNT;
+            break;
     }
 }
 
@@ -93,6 +106,11 @@ EVisionV2KeyboardController::~EVisionV2KeyboardController()
 std::string EVisionV2KeyboardController::GetName()
 {
     return(name);
+}
+
+bool EVisionV2KeyboardController::IsValid() const
+{
+    return keyvalue_map != nullptr;
 }
 
 std::string EVisionV2KeyboardController::GetSerial()
@@ -115,6 +133,7 @@ std::string EVisionV2KeyboardController::GetLocation()
 
 int EVisionV2KeyboardController::Query(uint8_t cmd, uint16_t offset, const uint8_t* idata, uint8_t size, uint8_t* odata)
 {
+    query_check_buffer(size <= EVISION_V2_PACKET_SIZE - 8);
     uint8_t buffer[EVISION_V2_PACKET_SIZE];
     memset(buffer, 0, sizeof(buffer));
 
@@ -141,12 +160,15 @@ int EVisionV2KeyboardController::Query(uint8_t cmd, uint16_t offset, const uint8
     {
         const std::lock_guard<std::mutex> lock(query_mutex);
 
-        hid_write(dev, buffer, sizeof(buffer));
+        query_check_buffer(hid_write(dev, buffer, sizeof(buffer)) == sizeof(buffer));
 
+        const std::chrono::steady_clock::time_point deadline = std::chrono::steady_clock::now() + 1000ms;
         do
         {
-            bytes_read = hid_read(dev, buffer, sizeof(buffer));
-        } while(bytes_read != 0 && buffer[0] != EVISION_V2_REPORT_ID);
+            int remaining = (int)std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now()).count();
+            query_check_buffer(remaining > 0);
+            bytes_read = hid_read_timeout(dev, buffer, sizeof(buffer), remaining);
+        } while(bytes_read > 0 && buffer[0] != EVISION_V2_REPORT_ID);
     }
     query_check_buffer(bytes_read == sizeof(buffer));
 
@@ -162,11 +184,11 @@ int EVisionV2KeyboardController::Query(uint8_t cmd, uint16_t offset, const uint8
         return -buffer[7];
     }
 
-    size = buffer[4];
-    if(size > EVISION_V2_PACKET_SIZE - 8)
+    if(buffer[4] > size)
     {
         return -256;
     }
+    size = buffer[4];
 
     if(odata)
     {
@@ -347,7 +369,8 @@ void EVisionV2KeyboardController::SetMode(EVisionV2KeyboardPart part, const Evis
     switch(part)
     {
         case EVISION_V2_KEYBOARD_PART_KEYBOARD:
-            size = sizeof(buffer);
+            /* Rainy 75 uses only the first eight lighting parameters. */
+            size = (layout == RAINY75_KEYBOARD_LAYOUT) ? 8 : sizeof(buffer);
             break;
         case EVISION_V2_KEYBOARD_PART_LOGO:
         case ENDORFY_KEYBOARD_PART_EDGE:
@@ -390,6 +413,10 @@ void EVisionV2KeyboardController::SetLedsDirect(const std::vector<RGBColor>& col
 
 void EVisionV2KeyboardController::SetLedDirect(int led, RGBColor colour)
 {
+    if(led < 0 || (size_t)led >= led_count)
+    {
+        return;
+    }
     uint8_t buffer[3];
     buffer[0] = RGBGetRValue(colour);
     buffer[1] = RGBGetGValue(colour);
@@ -401,7 +428,8 @@ void EVisionV2KeyboardController::SetLedDirect(int led, RGBColor colour)
 void EVisionV2KeyboardController::RefreshLedDirect()
 {
     // Write one zero byte in the first blank space
-    Query(EVISION_V2_CMD_SEND_DYNAMIC_COLORS, BLANK_SPACE * 3, nullptr, 1, nullptr);
+    unsigned short blank_space = (layout == RAINY75_KEYBOARD_LAYOUT) ? 15 : BLANK_SPACE;
+    Query(EVISION_V2_CMD_SEND_DYNAMIC_COLORS, blank_space * 3, nullptr, 1, nullptr);
 }
 
 void EVisionV2KeyboardController::EndLedsDirect()

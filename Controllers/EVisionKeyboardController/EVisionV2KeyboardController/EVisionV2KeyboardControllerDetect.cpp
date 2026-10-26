@@ -30,6 +30,33 @@
 \*---------------------------------------------------------*/
 #define ENDORFY_OMNIS_PID                           0x0012
 #define BYGG_CSB_ICL01_PID                          0x5041
+#define RAINY75_PID                                 0x5055
+
+DetectedControllers DetectRainy75Keyboards(hid_device_info* info, const std::string& name)
+{
+    DetectedControllers detected_controllers;
+
+    /* Shared VID/PID: do not claim other keyboards using the same IDs. */
+    if(!info->product_string || std::wstring(info->product_string) != L"Rainy 75")
+    {
+        return detected_controllers;
+    }
+
+    hid_device* dev = hid_open_path(info->path);
+    if(dev)
+    {
+        EVisionV2KeyboardController* controller = new EVisionV2KeyboardController(dev, info->path, RAINY75_KEYBOARD_LAYOUT, name);
+        if(controller->IsValid())
+        {
+            detected_controllers.push_back(new RGBController_EVisionV2Keyboard(controller, EVISION_V2_KEYBOARD_PART_KEYBOARD));
+        }
+        else
+        {
+            delete controller;
+        }
+    }
+    return detected_controllers;
+}
 
 DetectedControllers DetectEVisionV2Keyboards(hid_device_info* info, const std::string& name)
 {
@@ -88,3 +115,4 @@ DetectedControllers DetectEndorfyKeyboards(hid_device_info* info, const std::str
 \*---------------------------------------------------------*/
 REGISTER_HID_DETECTOR_IP("EVision Keyboard 320F:5041",  DetectEVisionV2Keyboards,   EVISION_VID,    BYGG_CSB_ICL01_PID, 1, EVISION_KEYBOARD_USAGE_PAGE);
 REGISTER_HID_DETECTOR_IP("Endorfy Omnis",               DetectEndorfyKeyboards,     SPCGEAR_VID,    ENDORFY_OMNIS_PID,  1, EVISION_KEYBOARD_USAGE_PAGE);
+REGISTER_HID_DETECTOR_IP("WOBKEY Rainy 75",             DetectRainy75Keyboards,     EVISION_VID,    RAINY75_PID,        1, EVISION_KEYBOARD_USAGE_PAGE);

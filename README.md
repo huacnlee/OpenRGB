@@ -1,5 +1,9 @@
 # IQUNIX EV63 fork
 
+Also supports the wired **WOBKEY Rainy 75** (`320f:5055`, ANSI): per-key RGB,
+Static color, brightness, and EVision hardware effects.
+See [Rainy 75 setup and validation](Documentation/Rainy75.md).
+
 Adds per-key lighting and brightness for the wired IQUNIX EV63 (`3869:63e1`),
 with [omarchy-theme-rgb](https://github.com/huacnlee/omarchy-theme-rgb) integration.
 [Download the release](https://github.com/huacnlee/OpenRGB/releases/latest) ·

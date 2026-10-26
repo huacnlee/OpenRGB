@@ -14,6 +14,7 @@
 #include <string>
 #include <hidapi.h>
 #include "RGBController.h"
+#include "Rainy75Layout.h"
 
 #define EVISION_V2_PACKET_SIZE                       64
 #define HID_MAX_STR                                 255
@@ -133,6 +134,7 @@ enum EVisionV2KeyboardLayout
 {
     EVISION_V2_KEYBOARD_LAYOUT,
     ENDORFY_KEYBOARD_LAYOUT,
+    RAINY75_KEYBOARD_LAYOUT,
 };
 
 enum EVisionV2KeyboardPart
@@ -163,6 +165,7 @@ public:
     std::string GetName();
     std::string GetSerial();
     std::string GetLocation();
+    bool IsValid() const;
 
     int  Query(uint8_t cmd, uint16_t offset = 0, const uint8_t* idata = nullptr, uint8_t size = 0, uint8_t* odata = nullptr);
     int  BeginConfigure();
@@ -187,11 +190,12 @@ private:
     std::string location;
     hid_device* dev;
 
-    size_t      map_size;
+    size_t      map_size = 0;
     size_t      macros_size;
 
-    uint8_t *   keyvalue_map;
-    size_t      led_count;
+    uint8_t *   keyvalue_map = nullptr;
+    size_t      led_count = 0;
+    uint8_t     rainy75_map[RAINY75_LED_COUNT];
 
     std::mutex  query_mutex;
 };

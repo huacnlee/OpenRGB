@@ -1,0 +1,2 @@
+# Wired WOBKEY Rainy 75 (EVision control interface)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="320f", ATTRS{idProduct}=="5055", TAG+="uaccess"

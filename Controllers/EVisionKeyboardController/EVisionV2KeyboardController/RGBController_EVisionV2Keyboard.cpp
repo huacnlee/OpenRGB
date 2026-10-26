@@ -293,6 +293,12 @@ RGBController_EVisionV2Keyboard::RGBController_EVisionV2Keyboard(EVisionV2Keyboa
     location    = controller->GetLocation();
     serial      = controller->GetSerial();
     layout      = controller->layout;
+    has_color_set = false;
+    if(layout == RAINY75_KEYBOARD_LAYOUT)
+    {
+        vendor = "WOBKEY";
+        description = "Rainy 75 ANSI USB keyboard";
+    }
 
     switch(part)
     {
@@ -436,6 +442,13 @@ void RGBController_EVisionV2Keyboard::SetupKeyboardModes()
     Static.colors_max     = 1;
     Static.color_mode     = MODE_COLORS_RANDOM;
     Static.colors.resize(1);
+    if(layout == RAINY75_KEYBOARD_LAYOUT)
+    {
+        /* Static must accept explicit CLI/SDK colors even when the
+           previously active hardware effect used random colors. */
+        Static.flags &= ~MODE_FLAG_HAS_RANDOM_COLOR;
+        Static.color_mode = MODE_COLORS_MODE_SPECIFIC;
+    }
     Static.brightness_min = EVISION_V2_BRIGHTNESS_LOWEST;
     Static.brightness_max = EVISION_V2_BRIGHTNESS_HIGHEST;
     Static.brightness     = EVISION_V2_BRIGHTNESS_HIGHEST;
@@ -618,6 +631,12 @@ void RGBController_EVisionV2Keyboard::SetupKeyboardModes()
     RainbowCircle.brightness     = EVISION_V2_BRIGHTNESS_HIGHEST;
     modes.push_back(RainbowCircle);
 
+    /* Rainy 75 custom flash slots have not been validated. */
+    if(layout == RAINY75_KEYBOARD_LAYOUT)
+    {
+        return;
+    }
+
     for(unsigned int i = 0; i < 10; i++)
     {
         mode Custom;
@@ -760,6 +779,35 @@ void RGBController_EVisionV2Keyboard::SetupEdgeModes()
 
 void RGBController_EVisionV2Keyboard::SetupZones()
 {
+    if(layout == RAINY75_KEYBOARD_LAYOUT)
+    {
+        unsigned int matrix[RAINY75_MATRIX_HEIGHT][RAINY75_MATRIX_WIDTH];
+        for(unsigned int row = 0; row < RAINY75_MATRIX_HEIGHT; row++)
+        {
+            for(unsigned int col = 0; col < RAINY75_MATRIX_WIDTH; col++)
+            {
+                matrix[row][col] = NA;
+            }
+        }
+        for(unsigned int i = 0; i < RAINY75_LED_COUNT; i++)
+        {
+            led new_led;
+            new_led.name = rainy75_keys[i].name;
+            new_led.value = rainy75_keys[i].index;
+            leds.push_back(new_led);
+            matrix[rainy75_keys[i].row][rainy75_keys[i].column] = i;
+        }
+        zone keyboard;
+        keyboard.name = ZONE_EN_KEYBOARD;
+        keyboard.type = ZONE_TYPE_MATRIX;
+        keyboard.leds_count = RAINY75_LED_COUNT;
+        keyboard.leds_min = RAINY75_LED_COUNT;
+        keyboard.leds_max = RAINY75_LED_COUNT;
+        keyboard.matrix_map.Set(RAINY75_MATRIX_HEIGHT, RAINY75_MATRIX_WIDTH, &matrix[0][0]);
+        zones.push_back(keyboard);
+        SetupColors();
+        return;
+    }
     unsigned short leds_count;
     unsigned int *matrix_map;
     const char **led_names;
@@ -816,9 +864,12 @@ void RGBController_EVisionV2Keyboard::SetupZones()
 
 void RGBController_EVisionV2Keyboard::LoadConfig()
 {
-    EvisionV2ModeConfig config;
+    EvisionV2ModeConfig config = {};
 
-    controller->GetMode(part, config);
+    if(controller->GetMode(part, config) < 0)
+    {
+        return;
+    }
 
     int mode = config.mode;
     if((part == EVISION_V2_KEYBOARD_PART_KEYBOARD) && (mode == EVISION_V2_MODE_CUSTOM))
